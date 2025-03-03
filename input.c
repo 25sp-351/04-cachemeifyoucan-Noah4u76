@@ -8,7 +8,7 @@ int read_pieces_from_file(const char* filename, Piece pieces[], int *count)
     FILE* fp = fopen(filename, "r");
     if (!fp) {
         fprintf(stderr, "Error: Could not open file '%s'\n", filename);
-        return 1;  // non-zero indicates error
+        return 1;
     }
 
     *count = 0;
@@ -21,5 +21,5 @@ int read_pieces_from_file(const char* filename, Piece pieces[], int *count)
     }
 
     fclose(fp);
-    return 0; // zero indicates success
+    return 0;
 }

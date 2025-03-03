@@ -2,23 +2,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/**
- * The cache is an array from index 0 (MRU) to index size-1 (LRU).
- */
 struct Cache {
     int capacity;
     int size;
     CacheEntry entries[CACHE_CAPACITY];
 };
 
-/* ---------------------- HELPER FUNCTION DECLARATIONS ------------------------ */
-
 static int find_index_recursive(Cache *cache, int rod_length, int startIndex);
 static void move_to_front(Cache *cache, int index);
 static void shift_right(CacheEntry entries[], int fromIndex, int toIndex);
 static void free_entry(CacheEntry *entry);
 
-/* ------------------------- PUBLIC INTERFACE --------------------------------- */
 
 Cache* cache_create()
 {
@@ -28,11 +22,10 @@ Cache* cache_create()
     cache->capacity = CACHE_CAPACITY;
     cache->size = 0;
 
-    // Initialize
-    for (int i = 0; i < CACHE_CAPACITY; i++) {
-        cache->entries[i].rod_length = -1;
-        cache->entries[i].total_value = 0;
-        cache->entries[i].cuts = NULL;
+    for (int ix = 0; ix < CACHE_CAPACITY; ix++) {
+        cache->entries[ix].rod_length = -1;
+        cache->entries[ix].total_value = 0;
+        cache->entries[ix].cuts = NULL;
     }
     return cache;
 }
@@ -41,8 +34,8 @@ void cache_destroy(Cache* cache)
 {
     if (!cache) return;
     // Free all cuts
-    for (int i = 0; i < cache->size; i++) {
-        free_entry(&cache->entries[i]);
+    for (int ix = 0; ix < cache->size; ix++) {
+        free_entry(&cache->entries[ix]);
     }
     free(cache);
 }
@@ -52,14 +45,12 @@ CacheEntry* cache_get(Cache* cache, int rod_length)
     // Recursively search for rod_length
     int index = find_index_recursive(cache, rod_length, 0);
     if (index < 0) {
-        // not found
         return NULL;
     }
 
     // If found, move that entry to the front (index 0) => MRU
     move_to_front(cache, index);
 
-    // Now the entry is at index 0
     return &cache->entries[0];
 }
 
@@ -105,8 +96,6 @@ void cache_put(Cache* cache, int rod_length, int *cuts, int total_value)
     }
 }
 
-/* ---------------------- HELPER FUNCTION DEFINITIONS ------------------------- */
-
 /**
  * Recursively searches for rod_length in entries[startIndex..(size-1)].
  * Returns the index if found, or -1 if not found.
@@ -114,7 +103,7 @@ void cache_put(Cache* cache, int rod_length, int *cuts, int total_value)
 static int find_index_recursive(Cache *cache, int rod_length, int startIndex)
 {
     if (startIndex >= cache->size) {
-        return -1; // not found
+        return -1;
     }
     if (cache->entries[startIndex].rod_length == rod_length) {
         return startIndex;
@@ -126,12 +115,7 @@ static int find_index_recursive(Cache *cache, int rod_length, int startIndex)
 /**
  * Move the entry at 'index' to the front (index 0) by shifting.
  * In an LRU scheme, index 0 is the MRU.
- *
- * Example:
- *   If the array is (0..size-1) and we want to move item at "index" to 0,
- *   we can store it in a temp, shift everything from 0..(index-1) one step right,
- *   then place the temp in [0].
- */
+*/
 static void move_to_front(Cache *cache, int index)
 {
     if (index <= 0) {
@@ -144,32 +128,20 @@ static void move_to_front(Cache *cache, int index)
     // shift_right(array, start, end) shifts the block [start..end] to [start+1..end+1].
     shift_right(cache->entries, 0, index - 1);
 
-    // place temp in entries[0]
     cache->entries[0] = temp;
 }
 
 /**
  * shift_right(entries, fromIndex, toIndex) recursively shifts
  * the array segment [fromIndex..toIndex] one position to the *right*,
- * i.e. entries[toIndex+1] = entries[toIndex], ..., up to entries[fromIndex+1].
- *
- * For example, if fromIndex=0 and toIndex=2, we do:
- *   entries[3] = entries[2]
- *   entries[2] = entries[1]
- *   entries[1] = entries[0]
- *
- * We'll do it from the end down to start, to avoid overwriting data.
- */
+*/
 static void shift_right(CacheEntry entries[], int fromIndex, int toIndex)
 {
     if (toIndex < fromIndex) {
-        // no shifting needed
         return;
     }
-    // shift the last one
     entries[toIndex + 1] = entries[toIndex];
 
-    // now shift the rest by recursing
     shift_right(entries, fromIndex, toIndex - 1);
 }
 
